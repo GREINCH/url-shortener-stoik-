@@ -83,6 +83,72 @@ The API will be accessible at http://127.0.0.1:80/redoc.
 ##### Redirect URL
 - Endpoint: GET /{slug}
 - Description: Redirects to the original URL associated with the provided slug. For example:
-```
+  ```
   http://127.0.0.1:80/A6H432
+  ```
+
+### Install a DNS Server
+
+* Following these steps, your domain `url-shortener.local` will resolve to `192.168.1.21` on your local network.
+* This allows you to simulate a more realistic production environment without modifying the `/etc/hosts` file on each machine.
+
+##### BIND9 Installation
+Execute the following commands to update your system and install BIND9 along with its utilities:
+
+  ```
+    sudo apt update && sudo apt upgrade -y
+    sudo apt install bind9 bind9-utils bind9-doc dnsutils
+  ```
+
+##### Configuration of the DNS Zone
+Edit the BIND9 local configuration file:
+  ```
+    sudo vi /etc/bind/named.conf.local
+  ```
+Add the following lines to define a new DNS zone for url-shortener.local:
+  ```
+    zone "url-shortener.local" {
+        type master;
+        file "/etc/bind/db.url-shortener.local";
+    };
+  ```
+
+##### Creation of the DNS Zone File
+Copy the default zone file to create a new one for url-shortener.local:
+
+  ```
+    sudo cp /etc/bind/db.local /etc/bind/db.url-shortener.local
+  ```
+Edit the new zone file:
+  ```
+    sudo nano /etc/bind/db.url-shortener.local
+  ```
+Modify the file to look like this, replacing IP_DU_CLUSTER with 192.168.1.21:
+  ```
+    ;
+    ; BIND data file for local loopback interface
+    ;
+    $TTL    604800
+    @       IN      SOA     url-shortener.local. root.url-shortener.local. (
+                                  2024062901     ; Serial
+                             604800         ; Refresh
+                              86400         ; Retry
+                            2419200         ; Expire
+                             604800 )       ; Negative Cache TTL
+    ;
+    @       IN      NS      url-shortener.local.
+    @       IN      A       192.168.1.21
+  ```
+
+##### Restart BIND9
+After modifying the configuration files, restart BIND9 to apply the changes:
+
+  ```
+    sudo systemctl restart bind9
+  ```
+
+##### Test the Configuration
+Use dig or nslookup to test the resolution of your domain:
+  ```
+    dig url-shortener.local @127.0.0.1
   ```
