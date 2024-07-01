@@ -1,0 +1,19 @@
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/jammy64"
+
+  # Set the disk size
+  # config.disksize.size = '40GB'
+
+  # Use the public network and specify the bridge adapter
+  config.vm.network "public_network", bridge: "enx482ae3bc1963"
+
+  config.vm.provider "virtualbox" do |vb|
+    vb.name = "KindServer"
+    vb.memory = "4096"
+    vb.cpus = 2
+    vb.gui = false
+  end
+
+  # Provision using the shell script
+  config.vm.provision "shell", path: "provision.sh"
+end
